@@ -1,27 +1,21 @@
 version: '3.4'
 
 services:
-  nginx:
+  nginx_nostros:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - '80:80'
-      - '443:443'
+      - '81:80'
+      - '444:443'
     restart: always
     volumes:
       - ./nginx/conf/:/etc/nginx/conf.d/:ro
       - /var/www/certbot:/var/www/certbot/:ro
       - /etc/letsencrypt/:/etc/nginx/ssl/:ro
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
-  tor:
-    build: ./tor
-    restart: always
-    depends_on:
+    networks:
       - nginx
-    volumes:
-      - ./tor:/var/lib/tor
-      - ./torrc:/etc/tor/torrc
   certbot:
     image: certbot/certbot:latest
     restart: always
@@ -29,3 +23,6 @@ services:
       - /var/www/certbot/:/var/www/certbot/:rw
       - /etc/letsencrypt/:/etc/letsencrypt/:rw
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+networks:
+  nginx:
+    driver: bridge
